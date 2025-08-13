@@ -14,9 +14,14 @@ import com.uptc.edu.boterito.repository.UserRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.uptc.edu.boterito.model.Location;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ObraService {
@@ -29,6 +34,9 @@ public class ObraService {
 
     @Autowired
     private LocationRepository locationRepository;
+
+    @Autowired 
+    private CloudinaryService cloudinaryService;
 
     public List<ObraUrbanArt> findAllWithAutor() {
         List<ObraUrbanArt> obras = obraRepository.findAllWithAutor();
@@ -53,11 +61,12 @@ public class ObraService {
         return obraRepository.filterObra(typefilter, filter);
     }
 
-    public ObraUrbanArt createObra(ObraRequest obra) {
+    public ObraUrbanArt createObra(ObraRequest obra, MultipartFile imagen) {
         ObraUrbanArt urbanArt = new ObraUrbanArt();
         Location newLocation = new Location();
         newLocation.setLat(Double.parseDouble(obra.getLat()));
         newLocation.setLng(Double.parseDouble(obra.getLng()));
+        newLocation.setDireccion(obra.getDireccion());
         Location location = locationRepository.save(newLocation);
 
         urbanArt.setTitulo(obra.getTitulo());
@@ -71,8 +80,28 @@ public class ObraService {
         urbanArt.setTipoMuralId(new ObjectId(obra.getTipoMural()));
         urbanArt.setEstadoConservacionId(new ObjectId(obra.getEstadoConservacionId()));
         urbanArt.setSuperficieId(new ObjectId(obra.getSuperficieId()));
-        urbanArt.setLink_obra(obra.getLink_obra());
         urbanArt.setUbicacionId(new ObjectId(location.getId()));
+        urbanArt.setEstadoRegistradoId(new ObjectId(obra.getEstadoRegistradoId()));
+
+        // Guardar imagen en carpeta 'uploads' y asignar link_obra
+    if (imagen != null && !imagen.isEmpty()) {
+        File file;
+        try {
+            file = File.createTempFile("temp", imagen.getOriginalFilename());
+            imagen.transferTo(file);
+            Map uploadResult = cloudinaryService.uploadFile(file);
+            String urlImagen = (String) uploadResult.get("secure_url");
+            urbanArt.setLink_obra(urlImagen);
+
+        file.delete(); // Limpiar archivo temporal
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+
+        
+    }
         return obraRepository.save(urbanArt);
     }
 }

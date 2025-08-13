@@ -31,5 +31,9 @@ public class ObraRequest {
 
     private String lng;
 
+    private String direccion;
+
+    private String estadoRegistradoId;
+
     private String link_obra; 
 }

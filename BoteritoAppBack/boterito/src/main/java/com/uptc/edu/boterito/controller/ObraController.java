@@ -6,6 +6,7 @@ import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,7 +29,8 @@ public class ObraController {
     }
 
     @PostMapping("/guardarObra")
-    public ObraUrbanArt registrarObra(@RequestBody ObraRequest obra) {
-        return obraService.createObra(obra);
+    public ObraUrbanArt registrarObra(@RequestPart("obra") ObraRequest obra,  // campos del formulario
+        @RequestPart(value = "imagen", required = false) MultipartFile imagen){ 
+        return obraService.createObra(obra, imagen);
     }
 }

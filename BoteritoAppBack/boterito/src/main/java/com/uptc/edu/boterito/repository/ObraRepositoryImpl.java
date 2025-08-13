@@ -100,23 +100,29 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
     }
 
     private Aggregation createAgregations(){
-        LookupOperation lookupAutor = createLookupOperation("usuarios", "autor_id", "_id", "autor");
+        
         LookupOperation lookupIlustracion = createLookupOperation("ilustracion_muralista", "ilustracion_id", "_id", "ilustracion");        
         LookupOperation lookupLocation = createLookupOperation("ubicaciones", "ubicaciones_id", "_id", "ubicacion");
         LookupOperation lookupTecnica = createLookupOperation("tecnicas", "tecnicas_id", "_id", "tecnica");
         LookupOperation lookupTipo = createLookupOperation("tipo_mural", "tipo_mural_id", "_id", "tipo");
-        
+        LookupOperation lookupEstadoConservacion = createLookupOperation("estado_conservacion", "estado_conservacion_id", "_id", "estadoConservacion");
+        LookupOperation lookupTipografia = createLookupOperation("tipografias", "tipografias_id", "_id", "typography");
+        LookupOperation lookupSuperficie = createLookupOperation("superficie", "superficie_id", "_id", "surface");
+        LookupOperation lookupEstadoRegistro = createLookupOperation("estado_registro", "estado_registrado_id", "_id", "registeredStatus");
         // 2) UnwindOperation: convierte el array "autor" en un objeto "autor" (mantiene obras sin autor si preserve true)
-        UnwindOperation unwindAutor = createUnwindOperation("autor");
+
         UnwindOperation unwindIlustracion = createUnwindOperation("ilustracion");
         UnwindOperation unwindUbicacion = createUnwindOperation("ubicacion");
         UnwindOperation unwindTecnica = createUnwindOperation("tecnica");
         UnwindOperation unwindTipo = createUnwindOperation("tipo");
+        UnwindOperation unwindEstadoConservacion = createUnwindOperation("estadoConservacion");
+        UnwindOperation unwindTipografia = createUnwindOperation("typography");
+        UnwindOperation unwindSuperficie = createUnwindOperation("surface");
+        UnwindOperation unwindEstadoRegistro = createUnwindOperation("registeredStatus");
+        
 
         // 3) Crea la Aggregation pipeline con los stages (orden importa)
         Aggregation aggregation = Aggregation.newAggregation(
-                lookupAutor,
-                unwindAutor,
                 lookupIlustracion,
                 unwindIlustracion,
                 lookupLocation,
@@ -124,7 +130,15 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
                 lookupTecnica,
                 unwindTecnica,
                 lookupTipo,
-                unwindTipo
+                unwindTipo,
+                lookupEstadoConservacion,
+                unwindEstadoConservacion,
+                lookupTipografia,
+                unwindTipografia,
+                lookupSuperficie,
+                unwindSuperficie,
+                lookupEstadoRegistro,
+                unwindEstadoRegistro
         );
         return aggregation;
     }

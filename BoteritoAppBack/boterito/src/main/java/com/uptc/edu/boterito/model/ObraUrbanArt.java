@@ -1,10 +1,12 @@
 package com.uptc.edu.boterito.model;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -17,47 +19,73 @@ public class ObraUrbanArt {
 
     private String titulo;
 
-    @Field("autor_id")
-    private String autorId;
-
-    private Author autor;
-
     @Field("fecha_creacion")
     private String fechaCreacion;
 
+    private String descripcion;
+
+    private List<Like> likes = new ArrayList<>();
+
+    private List<Calification> calificaciones = new ArrayList<>();
+
+    @Field("comentarios")
+    private List<Comment> comentarios = new ArrayList<>();
+
+    private String mensaje;
+
     @Field("ilustracion_id")
-    private String ilustracionId;
+    private ObjectId ilustracionId;
 
     private Ilustracion ilustracion;
 
     @Field("tecnicas_id")
-    private String tecnicaId;
+    private ObjectId tecnicaId;
 
     private Technique tecnica;
 
+    @Field("tipo_mural_id")
+    private ObjectId tipoMuralId;
+
+    private TypeUrbanArt tipo;
+
     @Field("ubicaciones_id")
-    private String ubicacionId;
+    private ObjectId ubicacionId;
 
     private Location ubicacion;
 
-    private String descripcion;
+    private String ancho;
 
-    @Field("estado_conservacion")
-    private String estadoConservacion;
+    private String alto;
 
-    private int likes;
+    private String observaciones;
 
-    @Field("comentarios")
-    private List<Comment> comentarios;
+    @Field("estado_conservacion_id")
+    private ObjectId estadoConservacionId;
 
-    private String mensaje;
+    private ConservationStatus estadoConservacion;
 
-    private String superficie;
+    private String autor_name;
 
+    @Field("tipografias_id")
+    private ObjectId tipografiasId;
 
-    @Field("tipo_mural_id")
-    private String tipoMuralId;
+    private Typography typography;
 
-    private TypeUrbanArt tipo;
+    @Field("superficie_id")
+    private ObjectId superficieId;
+
+    private Surface surface;
+
+    private String contexto_historico;
+
+    private String restaurador;
+
+    @Field("estado_registrado_id")
+    private ObjectId estadoRegistradoId;
+
+    private RegisteredStatus registeredStatus;
+
+    private String link_obra;
+        
 }
 

@@ -10,8 +10,12 @@ import lombok.Data;
 public class Location {
     @Id
     private String id;
-    private float lat;
-    private float lng;
+    private double lat;
+    private double lng;
     private String direccion;
-    private String lugar;
+    private String departamento;
+    private String pais;
+    private String ciudad;
+
+
 }

@@ -10,6 +10,5 @@ import lombok.Data;
 public class Technique {
     @Id
     private String id;
-    private String nombre;
-    private String descripcion;
+    private String tecnica;
 }

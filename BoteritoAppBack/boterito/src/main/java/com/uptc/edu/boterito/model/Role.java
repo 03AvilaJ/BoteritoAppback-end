@@ -6,10 +6,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 @Data
-@Document(collection = "ilustracion_muralista")
-public class Ilustracion {
+@Document(collection = "roles")
+public class Role {
     @Id
     private String id;
-    private String ilustracion;
-
+    private String rol;
 }

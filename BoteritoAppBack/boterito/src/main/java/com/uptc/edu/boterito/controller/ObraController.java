@@ -1,6 +1,7 @@
 package com.uptc.edu.boterito.controller;
 
 
+import com.uptc.edu.boterito.dto.ObraRequest;
 import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,20 +15,20 @@ import java.util.List;
 public class ObraController {
 
     @Autowired
-    private ObraService service;
+    private ObraService obraService;
 
     @GetMapping("/listaObras")
     public List<ObraUrbanArt> findAllWithAutor() {
-        return service.findAllWithAutor();
+        return obraService.findAllWithAutor();
     }
 
     @GetMapping("/filtrar")
     public List<ObraUrbanArt> findFilterObras(@RequestParam String typeFilter, @RequestParam String filter) {
-        return service.findFilterObras(typeFilter, filter);
+        return obraService.findFilterObras(typeFilter, filter);
     }
 
     @PostMapping("/guardarObra")
-    public ObraUrbanArt registrarObra(@RequestBody ObraUrbanArt obra) {
-        return service.guardar(obra);
+    public ObraUrbanArt registrarObra(@RequestBody ObraRequest obra) {
+        return obraService.createObra(obra);
     }
 }

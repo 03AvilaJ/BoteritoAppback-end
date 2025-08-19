@@ -1,5 +1,6 @@
 package com.uptc.edu.boterito.config;
 
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -7,15 +8,16 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import com.uptc.edu.boterito.security.CustomAuthEntryPoint;
 import com.uptc.edu.boterito.security.JwtAuthenticationFilter;
 import com.uptc.edu.boterito.service.UserService;
 
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
@@ -32,6 +34,8 @@ public class SecurityConfig {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
     }
+
+    
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -54,14 +58,19 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAuthEntryPoint authEntryPoint) throws Exception {
         http.cors().and().csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()
-                        // .requestMatchers("/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/obras/listaObras").permitAll()
+                        .requestMatchers("/api/usuarios/register").permitAll()                  
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                    .authenticationEntryPoint(authEntryPoint) // 👉 Aquí
+                )
                 .authenticationProvider(authenticationProvider()); // IMPORTANTE
+                
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

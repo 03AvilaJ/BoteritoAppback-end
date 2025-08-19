@@ -41,49 +41,6 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
         return results.getMappedResults();
     }
 
-    @Override
-    public List<ObraUrbanArt> filterObra(String typefilter, String filter) {
-        // Iniciamos el objeto Criteria vacío
-        Criteria criteria = new Criteria();
-
-        // Validamos que vengan datos válidos
-        if (typefilter != null && !typefilter.isEmpty() &&
-                filter != null && !filter.isEmpty()) {
-
-            // Según el tipo de filtro que llegue, aplicamos el campo correcto
-            switch (typefilter.toLowerCase()) {
-                case "tipo":
-                    // Filtra por el campo "tipo" directamente en la obra
-                    criteria = Criteria.where("tipo.tipo_mural").is(filter);
-                    break;
-
-                case "ilustracion":
-                    // Filtra dentro del subdocumento ilustracion, en el campo "tipo"
-                    criteria = Criteria.where("ilustracion.nombre").is(filter);
-                    break;
-
-                case "tecnica":
-                    // Filtra dentro del subdocumento tecnica, en el campo "nombre"
-                    criteria = Criteria.where("tecnica.nombre").is(filter);
-                    break;
-
-                default:
-                    // Si llega un filtro desconocido, no aplica condición (devuelve todo)
-                    criteria = new Criteria();
-                    break;
-            }
-        }
-
-        // Creamos la consulta con el criterio definido
-        Aggregation aggregation = createAgregations(null);
-        Aggregation.match(criteria); // aquí aplicas el filtro
-
-        AggregationResults<ObraUrbanArt> results = mongoTemplate.aggregate(aggregation, "obras", ObraUrbanArt.class);
-
-        return results.getMappedResults();
-
-    }
-
     // 1) LookupOperation: crea el $lookup entre "obras" y "cualquier coleccion"
     // from -> colección destino (usuarios)
     // localField -> campo en "obras" que contiene el id del autor en la BD

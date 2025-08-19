@@ -23,11 +23,6 @@ public class ObraController {
         return obraService.findAllWithAutor();
     }
 
-    @GetMapping("/filtrar")
-    public List<ObraUrbanArt> findFilterObras(@RequestParam String typeFilter, @RequestParam String filter) {
-        return obraService.findFilterObras(typeFilter, filter);
-    }
-
     @PostMapping("/guardarObra")
     public ObraUrbanArt registrarObra(@RequestPart("obra") ObraRequest obra,  // campos del formulario
         @RequestPart(value = "imagen", required = false) MultipartFile imagen){ 

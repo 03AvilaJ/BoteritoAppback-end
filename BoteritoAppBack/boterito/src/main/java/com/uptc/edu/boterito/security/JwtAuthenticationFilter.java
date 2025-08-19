@@ -1,6 +1,8 @@
 package com.uptc.edu.boterito.security;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -14,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.uptc.edu.boterito.service.UserService;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -21,9 +24,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserService userService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserService userService) {
         this.jwtUtil = jwtUtil;
-        this.userService = userDetailsService;
+        this.userService = userService;
     }
 
     @Override
@@ -32,22 +35,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
+        // 🔎 Buscar la cookie "jwt"
+        String jwt = null;
+        if (request.getCookies() != null) {
+            jwt = Arrays.stream(request.getCookies())
+                        .filter(c -> "jwt".equals(c.getName()))
+                        .findFirst()
+                        .map(Cookie::getValue)
+                        .orElse(null);
+        }
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (jwt == null) {
+            // ❌ No hay token → se delega a AuthenticationEntryPoint (401)
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
         if (!jwtUtil.validateToken(jwt)) {
-            filterChain.doFilter(request, response);
+            // ❌ Token inválido → limpiar contexto y delegar a AuthenticationEntryPoint
+            SecurityContextHolder.clearContext();
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token inválido o expirado");
             return;
         }
 
-        username = jwtUtil.extractUsername(jwt);
+        // ✅ Token válido → autenticar al usuario
+        String username = jwtUtil.extractUsername(jwt);
         UserDetails userDetails = userService.loadUserByUsername(username);
 
         var authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -61,4 +74,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-

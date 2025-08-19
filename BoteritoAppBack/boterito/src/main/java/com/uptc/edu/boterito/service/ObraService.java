@@ -57,10 +57,6 @@ public class ObraService {
         return obras;
     }
 
-    public List<ObraUrbanArt> findFilterObras(String typefilter, String filter) {
-        return obraRepository.filterObra(typefilter, filter);
-    }
-
     public ObraUrbanArt createObra(ObraRequest obra, MultipartFile imagen) {
         ObraUrbanArt urbanArt = new ObraUrbanArt();
         Location newLocation = new Location();

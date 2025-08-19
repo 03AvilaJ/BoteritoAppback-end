@@ -23,13 +23,34 @@ public class UserService implements UserDetailsService {
 
     // Método para crear usuario con contraseña hasheada
     public User createUser(String name, String pseudonimo, String email, String password, String role, String fecha_nacimiento) {
-        User user = new User();
-        user.setNombre(name);
-        user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password));  // Hash de la contraseña
-        user.setRoles_id(role);
-        user.setFecha_nacimiento(fecha_nacimiento);
-        user.setPseudonimo(pseudonimo);
+    // Verificar si ya existe email
+    User userEmail = userRepository.findByEmail(email);
+    if (userEmail != null) {
+        throw new IllegalArgumentException("El email ya está en uso");
+    }
+
+    // Verificar si ya existe pseudonimo
+    User userpseudonimo = userRepository.findByPseudonimo(pseudonimo);
+    if (userpseudonimo != null) {
+        throw new IllegalArgumentException("El pseudónimo ya está en uso");
+    }
+
+    User user = new User();
+    user.setNombre(name);
+    user.setEmail(email);
+    user.setPassword(passwordEncoder.encode(password));
+    user.setRoles_id(role);
+    user.setFecha_nacimiento(fecha_nacimiento);
+    user.setPseudonimo(pseudonimo);
+    return userRepository.save(user);
+}
+
+
+    public User findByEmail(String email){
+        return userRepository.findByEmail(email);
+    }
+
+    public User savUser(User user){
         return userRepository.save(user);
     }
 
@@ -44,7 +65,7 @@ public class UserService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(userSearch.getEmail())
                 .password(userSearch.getPassword())
-                .roles(userSearch.getRole().getRol())
+                .roles(userSearch.getRoles_id())
                 .build();
     }
 

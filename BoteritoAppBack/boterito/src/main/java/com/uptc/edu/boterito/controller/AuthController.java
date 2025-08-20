@@ -8,11 +8,13 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.uptc.edu.boterito.model.AuthRequest;
 
 import com.uptc.edu.boterito.security.JwtUtil;
+import com.uptc.edu.boterito.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -24,15 +26,29 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest loginRequest, HttpServletResponse response) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        String token = jwtUtil.generateToken(loginRequest.getEmail());
 
-        // Crear cookie segura
+        // 🔎 Cargar user desde la DB
+        UserDetails userDetails = userService.loadUserByUsername(loginRequest.getEmail());
+
+        // 🔎 Extraer rol (asumo un solo rol por usuario)
+        String role = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(auth -> auth.getAuthority().replace("ROLE_", "")) // quitamos el prefijo
+                .orElse("USER"); // valor por defecto
+
+        // 🔑 Generar token con email y rol
+        String token = jwtUtil.generateToken(loginRequest.getEmail(), role);
+
+        // 🍪 Crear cookie segura
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true) // 🔒 JavaScript NO puede leerla
                 .secure(true) // 🔒 Solo viaja por HTTPS (en local puedes poner false)
@@ -43,8 +59,7 @@ public class AuthController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        // Opcional: puedes devolver un body con datos del usuario
-        return ResponseEntity.ok(Map.of("message", "Login exitoso"));
+        return ResponseEntity.ok(Map.of("message", "Login exitoso", "role", role));
     }
 
     @PostMapping("/logout")

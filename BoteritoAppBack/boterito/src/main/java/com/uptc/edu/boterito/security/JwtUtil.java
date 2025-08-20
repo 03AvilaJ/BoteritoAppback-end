@@ -12,14 +12,16 @@ public class JwtUtil {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final long expirationMs = 3600000; // 1 hora
 
-    public String generateToken(String username) {
-        return Jwts.builder()
-            .setSubject(username)
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-            .signWith(key)
-            .compact();
-    }
+    public String generateToken(String username, String role) {
+    return Jwts.builder()
+        .setSubject(username)
+        .claim("role", role) // 👈 guardamos el rol o tipo de usuario
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+        .signWith(key)
+        .compact();
+}
+
 
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
@@ -29,6 +31,16 @@ public class JwtUtil {
             .getBody()
             .getSubject();
     }
+
+    public String extractRole(String token) {
+    return Jwts.parserBuilder()
+        .setSigningKey(key)
+        .build()
+        .parseClaimsJws(token)
+        .getBody()
+        .get("role", String.class);
+}
+
 
     public boolean validateToken(String token) {
         try {

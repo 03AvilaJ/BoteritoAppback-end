@@ -1,6 +1,5 @@
 package com.uptc.edu.boterito.service;
 
-
 import com.uptc.edu.boterito.dto.ObraRequest;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
@@ -35,22 +34,25 @@ public class ObraService {
     @Autowired
     private LocationRepository locationRepository;
 
-    @Autowired 
+    @Autowired
     private CloudinaryService cloudinaryService;
 
     public List<ObraUrbanArt> findAllWithAutor() {
         List<ObraUrbanArt> obras = obraRepository.findAllWithAutor();
         for (ObraUrbanArt obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
-                User usuario = userRepository.findById(comentario.getUsuarios_id()).orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
+                User usuario = userRepository.findById(comentario.getUsuarios_id()).orElseThrow(
+                        () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
                 comentario.setNameUser(usuario.getNombre());
             }
             for (Like like : obra.getLikes()) {
-                User usuario = userRepository.findById(like.getUsuarios_id()).orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
+                User usuario = userRepository.findById(like.getUsuarios_id())
+                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
                 like.setUser_name(usuario.getNombre());
             }
             for (Calification calification : obra.getCalificaciones()) {
-                User usuario = userRepository.findById(calification.getUsuarios_id()).orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
+                User usuario = userRepository.findById(calification.getUsuarios_id()).orElseThrow(
+                        () -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
                 calification.setUser_name(usuario.getNombre());
             }
         }
@@ -80,24 +82,34 @@ public class ObraService {
         urbanArt.setEstadoRegistradoId(new ObjectId(obra.getEstadoRegistradoId()));
 
         // Guardar imagen en carpeta 'uploads' y asignar link_obra
-    if (imagen != null && !imagen.isEmpty()) {
-        File file;
-        try {
-            file = File.createTempFile("temp", imagen.getOriginalFilename());
-            imagen.transferTo(file);
-            Map uploadResult = cloudinaryService.uploadFile(file);
-            String urlImagen = (String) uploadResult.get("secure_url");
-            urbanArt.setLink_obra(urlImagen);
+        if (imagen != null && !imagen.isEmpty()) {
+            File file;
+            try {
+                file = File.createTempFile("temp", imagen.getOriginalFilename());
+                imagen.transferTo(file);
+                Map uploadResult = cloudinaryService.uploadFile(file);
+                String urlImagen = (String) uploadResult.get("secure_url");
+                urbanArt.setLink_obra(urlImagen);
 
-        file.delete(); // Limpiar archivo temporal
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+                file.delete(); // Limpiar archivo temporal
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
-        
-
-        
-    }
         return obraRepository.save(urbanArt);
     }
+
+    public ObraUrbanArt updateStatusRegister(String id, String idRegisterStatus) {
+        if (!ObjectId.isValid(idRegisterStatus)) {
+            throw new IllegalArgumentException("El idRegisterStatus no es válido");
+        }
+
+        ObraUrbanArt obra = obraRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Obra con id " + id + " no encontrada"));
+
+        obra.setEstadoRegistradoId(new ObjectId(idRegisterStatus));
+        return obraRepository.save(obra);
+    }
+
 }

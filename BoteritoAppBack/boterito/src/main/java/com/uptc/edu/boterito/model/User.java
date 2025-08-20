@@ -1,5 +1,6 @@
 package com.uptc.edu.boterito.model;
 
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -16,6 +17,6 @@ public class User {
     private String email;
     private String biografia;
     private String password;
-    private String roles_id;
+    private ObjectId roles_id;
     private Role role;
 }

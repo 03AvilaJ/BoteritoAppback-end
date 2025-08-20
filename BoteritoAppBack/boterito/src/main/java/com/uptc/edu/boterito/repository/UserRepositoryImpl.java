@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.uptc.edu.boterito.model.User;
 
 @Repository
-public class UserRepositoryImpl {
+public class UserRepositoryImpl implements UserRepositoryCustom{
 
     private final MongoTemplate mongoTemplate;
 
@@ -21,13 +21,15 @@ public class UserRepositoryImpl {
         this.mongoTemplate = mongoTemplate;
     }
 
+    
+    @Override
     public List<User> findAllUsersWithRoles() {
         LookupOperation lookupRole = LookupOperation.newLookup()
                 .from("roles")
                 .localField("roles_id")
                 .foreignField("_id")
-                .as("rol");
-        UnwindOperation unwindRole = Aggregation.unwind("rol", true);
+                .as("role");
+        UnwindOperation unwindRole = Aggregation.unwind("role", true);
 
         Aggregation aggregation = Aggregation.newAggregation(
                 lookupRole,
@@ -36,7 +38,7 @@ public class UserRepositoryImpl {
 
         AggregationResults<User> results =
                 mongoTemplate.aggregate(aggregation, "usuarios", User.class);
-
+        System.out.println(results.getMappedResults());
         return results.getMappedResults();
     }
 }

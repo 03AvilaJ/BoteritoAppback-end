@@ -12,7 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import com.uptc.edu.boterito.model.AuthRequest;
-
+import com.uptc.edu.boterito.model.User;
 import com.uptc.edu.boterito.security.JwtUtil;
 import com.uptc.edu.boterito.service.UserService;
 
@@ -45,16 +45,18 @@ public class AuthController {
                 .map(auth -> auth.getAuthority().replace("ROLE_", "")) // quitamos el prefijo
                 .orElse("USER"); // valor por defecto
 
+        User user = userService.findByEmail(loginRequest.getEmail());
+        
         // 🔑 Generar token con email y rol
-        String token = jwtUtil.generateToken(loginRequest.getEmail(), role);
+        String token = jwtUtil.generateToken(loginRequest.getEmail(),user.getId(), role);
 
         // 🍪 Crear cookie segura
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
                 .httpOnly(true) // 🔒 JavaScript NO puede leerla
-                .secure(true) // 🔒 Solo viaja por HTTPS (en local puedes poner false)
+                .secure(false) // 🔒 Solo viaja por HTTPS (en local puedes poner false)
                 .path("/") // Disponible en toda la app
                 .maxAge(60 * 60) // 1 hora
-                .sameSite("Strict") // 🔒 Previene CSRF básico
+                .sameSite("Lax") // 🔒 Previene CSRF básico
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

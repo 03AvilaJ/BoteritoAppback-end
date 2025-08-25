@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // ❌ Token inválido → limpiar contexto y delegar a AuthenticationEntryPoint
             SecurityContextHolder.clearContext();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Token inválido o expirado");
+            response.getWriter().write("{\"error\":\"Token inválido o expirado\"}");
             return;
         }
 
@@ -75,4 +75,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
 
     }
+
+    @Override
+protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    String path = request.getServletPath();
+    // ❌ No aplicar filtro en login ni en registro
+    return path.startsWith("/auth/login");
+}
+
 }

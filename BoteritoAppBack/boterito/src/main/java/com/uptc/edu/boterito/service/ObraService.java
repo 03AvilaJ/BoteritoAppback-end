@@ -9,6 +9,7 @@ import com.uptc.edu.boterito.model.User;
 import com.uptc.edu.boterito.repository.LocationRepository;
 import com.uptc.edu.boterito.repository.ObraRepository;
 import com.uptc.edu.boterito.repository.UserRepository;
+import com.uptc.edu.boterito.security.JwtUtil;
 
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.uptc.edu.boterito.model.Location;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,21 +39,46 @@ public class ObraService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    public List<ObraUrbanArt> findAllWithAutor() {
-        List<ObraUrbanArt> obras = obraRepository.findAllWithAutor();
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    public List<ObraUrbanArt> findAllValidates() {
+        List<ObraUrbanArt> obras = obraRepository.findAllValidates();
         for (ObraUrbanArt obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
-                User usuario = userRepository.findById(comentario.getUsuarios_id()).orElseThrow(
+                User usuario = userRepository.findById(comentario.getUsuarios_id().toString()).orElseThrow(
                         () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
                 comentario.setNameUser(usuario.getNombre());
             }
             for (Like like : obra.getLikes()) {
-                User usuario = userRepository.findById(like.getUsuarios_id())
+                User usuario = userRepository.findById(like.getUsuarios_id().toString())
                         .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
                 like.setUser_name(usuario.getNombre());
             }
             for (Calification calification : obra.getCalificaciones()) {
-                User usuario = userRepository.findById(calification.getUsuarios_id()).orElseThrow(
+                User usuario = userRepository.findById(calification.getUsuarios_id().toString()).orElseThrow(
+                        () -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
+                calification.setUser_name(usuario.getNombre());
+            }
+        }
+        return obras;
+    }
+
+    public List<ObraUrbanArt> findAll() {
+        List<ObraUrbanArt> obras = obraRepository.findAll();
+        for (ObraUrbanArt obra : obras) {
+            for (Comment comentario : obra.getComentarios()) {
+                User usuario = userRepository.findById(comentario.getUsuarios_id().toString()).orElseThrow(
+                        () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
+                comentario.setNameUser(usuario.getNombre());
+            }
+            for (Like like : obra.getLikes()) {
+                User usuario = userRepository.findById(like.getUsuarios_id().toString())
+                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
+                like.setUser_name(usuario.getNombre());
+            }
+            for (Calification calification : obra.getCalificaciones()) {
+                User usuario = userRepository.findById(calification.getUsuarios_id().toString()).orElseThrow(
                         () -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
                 calification.setUser_name(usuario.getNombre());
             }
@@ -110,6 +137,79 @@ public class ObraService {
 
         obra.setEstadoRegistradoId(new ObjectId(idRegisterStatus));
         return obraRepository.save(obra);
+    }
+
+    public void addComment(Comment comment, String obraId, String token) {
+        // Validar campos obligatorios
+        if (comment.getTexto() == null || comment.getTexto().trim().isEmpty()) {
+            throw new IllegalArgumentException("El comentario no puede estar vacío");
+        }
+
+        // 1. Decodificar token
+        String userId = jwtUtil.getUserIdFromToken(token);
+        String username = jwtUtil.extractUsername(token);
+
+        // 2. Buscar obra
+        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+
+        // 3. Completar el comentario con info del usuario
+        comment.setUsuarios_id(new ObjectId(userId));
+        comment.setNameUser(username);
+        comment.setFecha(new Date()); // forzamos fecha del servidor
+
+        // 4. Agregar a la obra
+        urbanArt.getComentarios().add(comment);
+
+        // 5. Guardar todo
+        obraRepository.save(urbanArt);
+    }
+
+    public void addlIKE( String obraId, String token) {
+
+        // 1. Decodificar token
+        String userId = jwtUtil.getUserIdFromToken(token);
+        String username = jwtUtil.extractUsername(token);
+
+        // 2. Buscar obra
+        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+
+        // 3. Completar con info del usuario
+        Like like = new Like();
+        like.setUsuarios_id(new ObjectId(userId));
+        like.setUser_name(username);// forzamos fecha del servidor
+
+        // 4. Agregar a la obra
+        urbanArt.getLikes().add(like);
+
+        // 5. Guardar todo
+        obraRepository.save(urbanArt);
+    }
+
+    public void addCalification(Calification calification, String obraId, String token) {
+        // Validar campos obligatorios
+        if (calification.getValor() == null || calification.getValor().trim().isEmpty()) {
+            throw new IllegalArgumentException("El comentario no puede estar vacío");
+        }
+
+        // 1. Decodificar token
+        String userId = jwtUtil.getUserIdFromToken(token);
+        String username = jwtUtil.extractUsername(token);
+
+        // 2. Buscar obra
+        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+
+        // 3. Completar el comentario con info del usuario
+        calification.setUsuarios_id(new ObjectId(userId));
+        calification.setUser_name(username); // forzamos fecha del servidor
+
+        // 4. Agregar a la obra
+        urbanArt.getCalificaciones().add(calification);
+
+        // 5. Guardar todo
+        obraRepository.save(urbanArt);
     }
 
 }

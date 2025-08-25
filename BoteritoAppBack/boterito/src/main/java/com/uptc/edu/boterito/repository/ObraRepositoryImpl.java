@@ -25,13 +25,27 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
     }
 
     @Override
-    public List<ObraUrbanArt> findAllWithAutor() {
+    public List<ObraUrbanArt> findAllValidates() {
 
         MatchOperation matchValidado = Aggregation
                 .match(Criteria.where("registeredStatus.estado_registro").is("validado"));
 
         // 3) Crea la Aggregation pipeline con los stages (orden importa)
         Aggregation aggregation = createAgregations(matchValidado);
+
+        // 4) Ejecuta la agregación sobre la colección "obras" y mapea el resultado a
+        // ObraUrbanArt.class
+        AggregationResults<ObraUrbanArt> results = mongoTemplate.aggregate(aggregation, "obras", ObraUrbanArt.class);
+
+        // 5) Retorna la lista mapeada
+        return results.getMappedResults();
+    }
+
+    @Override
+    public List<ObraUrbanArt> findAll() {
+
+        // 3) Crea la Aggregation pipeline con los stages (orden importa)
+        Aggregation aggregation = createAgregations(null);
 
         // 4) Ejecuta la agregación sobre la colección "obras" y mapea el resultado a
         // ObraUrbanArt.class

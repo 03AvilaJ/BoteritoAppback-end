@@ -1,6 +1,8 @@
 package com.uptc.edu.boterito.controller;
 
 import com.uptc.edu.boterito.dto.ObraRequest;
+import com.uptc.edu.boterito.model.Calification;
+import com.uptc.edu.boterito.model.Comment;
 import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +22,15 @@ public class ObraController {
     @Autowired
     private ObraService obraService;
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public List<ObraUrbanArt> findAll() {
+        return obraService.findAll();
+    }
+
     @GetMapping("/listaObras")
-    public List<ObraUrbanArt> findAllWithAutor() {
-        return obraService.findAllWithAutor();
+    public List<ObraUrbanArt> findAllValidates() {
+        return obraService.findAllValidates();
     }
 
     @PostMapping("/guardarObra")
@@ -32,19 +40,60 @@ public class ObraController {
     }
 
     // Para actualizar parcialmente un campo (ej: titulo)
-@PatchMapping("/{id}/validarobra")
-@PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<?> actualizarEstadoRegistrado(
-        @PathVariable String id,
-        @RequestParam String idRegisteredStatus) {
-    try {
-        ObraUrbanArt obra = obraService.updateStatusRegister(id, idRegisteredStatus);
+    @PatchMapping("/{id}/validarobra")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> actualizarEstadoRegistrado(
+            @PathVariable String id,
+            @RequestParam String idRegisteredStatus) {
+        try {
+            ObraUrbanArt obra = obraService.updateStatusRegister(id, idRegisteredStatus);
 
-        return ResponseEntity.ok(obra);
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error al actualizar el estado registrado: " + e.getMessage());
+            return ResponseEntity.ok(obra);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar el estado registrado: " + e.getMessage());
+        }
     }
-}
+
+    @PostMapping("/{obraId}/comments")
+    public ResponseEntity<?> addComment(
+            @PathVariable String obraId,
+            @RequestBody Comment comment,
+            @CookieValue(name = "jwt", required = false) String token // 👈 aquí leemos la cookie
+    ) {
+        if (token == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+
+        obraService.addComment(comment, obraId, token);
+        return ResponseEntity.ok("Comentario agregado");
+    }
+
+    @GetMapping("/{obraId}/like")
+    public ResponseEntity<?> addLike(
+            @PathVariable String obraId,
+            @CookieValue(name = "jwt", required = false) String token // 👈 aquí leemos la cookie
+    ) {
+        if (token == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+
+        obraService.addlIKE(obraId, token);
+        return ResponseEntity.ok("Like agregado");
+    }
+
+    @PostMapping("/{obraId}/calificacion")
+    public ResponseEntity<?> addCalification(
+            @PathVariable String obraId,
+            @RequestBody Calification calification,
+            @CookieValue(name = "jwt", required = false) String token // 👈 aquí leemos la cookie
+    ) {
+        if (token == null) {
+            return ResponseEntity.status(401).body("No autenticado");
+        }
+
+        obraService.addCalification(calification, obraId, token);
+        return ResponseEntity.ok("Calificacion agregada");
+    }
 
 }

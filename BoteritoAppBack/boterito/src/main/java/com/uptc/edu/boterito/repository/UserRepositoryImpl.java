@@ -16,7 +16,6 @@ public class UserRepositoryImpl implements UserRepositoryCustom{
 
     private final MongoTemplate mongoTemplate;
 
-    // Constructor injection (mejor que @Autowired en campos)
     public UserRepositoryImpl(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }

@@ -3,6 +3,7 @@ package com.uptc.edu.boterito.controller;
 import com.uptc.edu.boterito.dto.ObraRequest;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
+import com.uptc.edu.boterito.model.Like;
 import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +66,8 @@ public class ObraController {
             return ResponseEntity.status(401).body("No autenticado");
         }
 
-        obraService.addComment(comment, obraId, token);
-        return ResponseEntity.ok("Comentario agregado");
+        Comment newComment = obraService.addComment(comment, obraId, token);
+        return ResponseEntity.ok(newComment);
     }
 
     @GetMapping("/{obraId}/like")
@@ -78,8 +79,8 @@ public class ObraController {
             return ResponseEntity.status(401).body("No autenticado");
         }
 
-        obraService.addlIKE(obraId, token);
-        return ResponseEntity.ok("Like agregado");
+        Like newLike = obraService.addlIKE(obraId, token);
+        return ResponseEntity.ok(newLike);
     }
 
     @PostMapping("/{obraId}/calificacion")

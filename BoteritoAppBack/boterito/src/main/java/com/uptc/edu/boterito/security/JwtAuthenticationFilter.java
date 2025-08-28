@@ -80,7 +80,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
     String path = request.getServletPath();
     // ❌ No aplicar filtro en login ni en registro
-    return path.startsWith("/auth/login");
+    return path.startsWith("/auth/login") || path.startsWith("/auth/logout");
 }
 
 }

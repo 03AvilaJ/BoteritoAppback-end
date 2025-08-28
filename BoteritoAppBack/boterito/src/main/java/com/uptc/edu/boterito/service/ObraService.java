@@ -139,7 +139,7 @@ public class ObraService {
         return obraRepository.save(obra);
     }
 
-    public void addComment(Comment comment, String obraId, String token) {
+    public Comment addComment(Comment comment, String obraId, String token) {
         // Validar campos obligatorios
         if (comment.getTexto() == null || comment.getTexto().trim().isEmpty()) {
             throw new IllegalArgumentException("El comentario no puede estar vacío");
@@ -163,9 +163,10 @@ public class ObraService {
 
         // 5. Guardar todo
         obraRepository.save(urbanArt);
+        return comment;
     }
 
-    public void addlIKE( String obraId, String token) {
+    public Like addlIKE( String obraId, String token) {
 
         // 1. Decodificar token
         String userId = jwtUtil.getUserIdFromToken(token);
@@ -175,16 +176,25 @@ public class ObraService {
         ObraUrbanArt urbanArt = obraRepository.findById(obraId)
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
-        // 3. Completar con info del usuario
+        // 3. Revisar si ya existe un like de este usuario
+    boolean alreadyLiked = urbanArt.getLikes().stream()
+            .anyMatch(l -> l.getUsuarios_id().toHexString().equals(userId));
+
+    if (alreadyLiked) {
+        throw new RuntimeException("El usuario ya dio like a esta obra");
+    }
+        
+        // 4. Completar con info del usuario
         Like like = new Like();
         like.setUsuarios_id(new ObjectId(userId));
         like.setUser_name(username);// forzamos fecha del servidor
 
-        // 4. Agregar a la obra
+        // 5. Agregar a la obra
         urbanArt.getLikes().add(like);
 
-        // 5. Guardar todo
+        // 6. Guardar todo
         obraRepository.save(urbanArt);
+        return like;
     }
 
     public void addCalification(Calification calification, String obraId, String token) {

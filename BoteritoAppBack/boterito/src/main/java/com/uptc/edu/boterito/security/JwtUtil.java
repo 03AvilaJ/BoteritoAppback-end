@@ -16,7 +16,7 @@ public class JwtUtil {
     return Jwts.builder()
         .setSubject(username)
         .claim("userId", user_id)
-        .claim("role", role) // 👈 guardamos el rol o tipo de usuario
+        .claim("role", role)// 👈 guardamos el rol o tipo de usuario
         .setIssuedAt(new Date())
         .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
         .signWith(key)

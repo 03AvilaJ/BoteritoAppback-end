@@ -48,7 +48,7 @@ public class AuthController {
         User user = userService.findByEmail(loginRequest.getEmail());
         
         // 🔑 Generar token con email y rol
-        String token = jwtUtil.generateToken(loginRequest.getEmail(),user.getId(), role);
+        String token = jwtUtil.generateToken(user.getPseudonimo(),user.getId(), role);
 
         // 🍪 Crear cookie segura
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
@@ -61,7 +61,7 @@ public class AuthController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(Map.of("message", "Login exitoso", "role", role));
+        return ResponseEntity.ok(Map.of("message", "Login exitoso", "role", role, "pseudonimo", user.getPseudonimo()));
     }
 
     @PostMapping("/logout")

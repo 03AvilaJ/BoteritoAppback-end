@@ -12,9 +12,9 @@ public class JwtUtil {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final long expirationMs = 3600000; // 1 hora
 
-    public String generateToken(String username, String user_id, String role) {
+    public String generateToken(String pseudonimo, String user_id, String role) {
     return Jwts.builder()
-        .setSubject(username)
+        .setSubject(pseudonimo)
         .claim("userId", user_id)
         .claim("role", role)// 👈 guardamos el rol o tipo de usuario
         .setIssuedAt(new Date())

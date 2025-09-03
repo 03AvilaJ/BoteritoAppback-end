@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import com.uptc.edu.boterito.model.AuthRequest;
 import com.uptc.edu.boterito.model.User;
 import com.uptc.edu.boterito.security.JwtUtil;
+import com.uptc.edu.boterito.service.GoogleAuthService;
 import com.uptc.edu.boterito.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +32,9 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private GoogleAuthService googleAuthService;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest loginRequest, HttpServletResponse response) {
         authenticationManager.authenticate(
@@ -46,9 +50,9 @@ public class AuthController {
                 .orElse("USER"); // valor por defecto
 
         User user = userService.findByEmail(loginRequest.getEmail());
-        
+
         // 🔑 Generar token con email y rol
-        String token = jwtUtil.generateToken(user.getPseudonimo(),user.getId(), role);
+        String token = jwtUtil.generateToken(user.getPseudonimo(), user.getId(), role);
 
         // 🍪 Crear cookie segura
         ResponseCookie cookie = ResponseCookie.from("jwt", token)
@@ -62,6 +66,17 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok(Map.of("message", "Login exitoso", "role", role, "pseudonimo", user.getPseudonimo()));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body, HttpServletResponse response) {
+        try {
+            String token = body.get("token");
+            Map<String, Object> result = googleAuthService.authenticateWithGoogle(token, response);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/logout")

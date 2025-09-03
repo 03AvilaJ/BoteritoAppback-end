@@ -60,6 +60,9 @@ public class UserService implements UserDetailsService {
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
+    public User findByPseudonimo(String email) {
+        return userRepository.findByPseudonimo(email);
+    }
 
     public User savUser(User user) {
         return userRepository.save(user);

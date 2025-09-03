@@ -10,5 +10,5 @@ import com.uptc.edu.boterito.model.User;
 @Repository
 public interface UserRepository extends MongoRepository<User,String>, UserRepositoryCustom{
     User findByEmail(String email);
-    User findByPseudonimo(String pseudonimo);
+    
 }

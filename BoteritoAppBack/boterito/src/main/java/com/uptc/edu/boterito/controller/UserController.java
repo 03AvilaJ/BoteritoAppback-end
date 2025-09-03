@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.uptc.edu.boterito.dto.UserDTO;
 import com.uptc.edu.boterito.model.User;
+import com.uptc.edu.boterito.security.JwtUtil;
 import com.uptc.edu.boterito.service.UserService;
 
 @RestController
@@ -26,6 +28,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -63,10 +68,23 @@ public class UserController {
     }
 
     @GetMapping("/perfil")
-    public ResponseEntity<User> searchUser(Authentication authentication) {
-        String email = authentication.getName(); // se obtiene del JWT o cookie
-        User user = userService.findByEmail(email);
-        return ResponseEntity.ok(user);
+public ResponseEntity<?> searchUser(@CookieValue(name = "jwt", required = false) String token) {
+    if (token == null) {
+        return ResponseEntity.status(401).body("No autenticado");
     }
+
+    try {
+        String pseudonimo = jwtUtil.extractUsername(token); // el "subject" del JWT
+        User user = userService.findByPseudonimo(pseudonimo);
+        
+        if (user == null) {
+            return ResponseEntity.status(404).body("Usuario no encontrado");
+        }
+        return ResponseEntity.ok(user);
+    } catch (Exception e) {
+        return ResponseEntity.status(401).body("Token inválido o expirado");
+    }
+}
+
 
 }

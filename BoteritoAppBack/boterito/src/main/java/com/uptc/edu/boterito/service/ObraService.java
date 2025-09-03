@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ObraService {
@@ -65,22 +66,23 @@ public class ObraService {
     }
 
     public List<ObraUrbanArt> findAll() {
+        List<User> allUsers = userRepository.findAll();
+        Map<String, User> userMap = allUsers.stream()
+            .collect(Collectors.toMap(u -> u.getId().toString(), u -> u));
+
         List<ObraUrbanArt> obras = obraRepository.findAll();
         for (ObraUrbanArt obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
-                User usuario = userRepository.findById(comentario.getUsuarios_id().toString()).orElseThrow(
-                        () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
-                comentario.setNameUser(usuario.getNombre());
+                User usuario = userMap.get(comentario.getUsuarios_id().toString());
+                comentario.setNameUser(usuario != null ? usuario.getNombre() : "Desconocido");
             }
             for (Like like : obra.getLikes()) {
-                User usuario = userRepository.findById(like.getUsuarios_id().toString())
-                        .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
-                like.setUser_name(usuario.getNombre());
+                User usuario = userMap.get(like.getUsuarios_id().toString());
+                like.setUser_name(usuario != null ? usuario.getNombre() : "Desconocido");
             }
             for (Calification calification : obra.getCalificaciones()) {
-                User usuario = userRepository.findById(calification.getUsuarios_id().toString()).orElseThrow(
-                        () -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
-                calification.setUser_name(usuario.getNombre());
+                User usuario = userMap.get(calification.getUsuarios_id().toString());
+                calification.setUser_name(usuario != null ? usuario.getNombre() : "Desconocido");
             }
         }
         return obras;

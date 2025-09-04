@@ -24,7 +24,7 @@ public class JwtUtil {
 }
 
 
-    public String extractUsername(String token) {
+    public String extractPseudonimo(String token) {
         return Jwts.parserBuilder()
             .setSigningKey(key)
             .build()

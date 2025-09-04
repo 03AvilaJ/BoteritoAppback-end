@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,17 +50,17 @@ public class ObraService {
             for (Comment comentario : obra.getComentarios()) {
                 User usuario = userRepository.findById(comentario.getUsuarios_id().toString()).orElseThrow(
                         () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
-                comentario.setNameUser(usuario.getNombre());
+                comentario.setNameUser(usuario.getPseudonimo());
             }
             for (Like like : obra.getLikes()) {
                 User usuario = userRepository.findById(like.getUsuarios_id().toString())
                         .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + like.getUsuarios_id()));
-                like.setUser_name(usuario.getNombre());
+                like.setUser_name(usuario.getPseudonimo());
             }
             for (Calification calification : obra.getCalificaciones()) {
                 User usuario = userRepository.findById(calification.getUsuarios_id().toString()).orElseThrow(
                         () -> new RuntimeException("Usuario no encontrado: " + calification.getUsuarios_id()));
-                calification.setUser_name(usuario.getNombre());
+                calification.setUser_name(usuario.getPseudonimo());
             }
         }
         return obras;
@@ -68,21 +69,21 @@ public class ObraService {
     public List<ObraUrbanArt> findAll() {
         List<User> allUsers = userRepository.findAll();
         Map<String, User> userMap = allUsers.stream()
-            .collect(Collectors.toMap(u -> u.getId().toString(), u -> u));
+                .collect(Collectors.toMap(u -> u.getId().toString(), u -> u));
 
         List<ObraUrbanArt> obras = obraRepository.findAll();
         for (ObraUrbanArt obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
                 User usuario = userMap.get(comentario.getUsuarios_id().toString());
-                comentario.setNameUser(usuario != null ? usuario.getNombre() : "Desconocido");
+                comentario.setNameUser(usuario != null ? usuario.getPseudonimo() : "Desconocido");
             }
             for (Like like : obra.getLikes()) {
                 User usuario = userMap.get(like.getUsuarios_id().toString());
-                like.setUser_name(usuario != null ? usuario.getNombre() : "Desconocido");
+                like.setUser_name(usuario != null ? usuario.getPseudonimo() : "Desconocido");
             }
             for (Calification calification : obra.getCalificaciones()) {
                 User usuario = userMap.get(calification.getUsuarios_id().toString());
-                calification.setUser_name(usuario != null ? usuario.getNombre() : "Desconocido");
+                calification.setUser_name(usuario != null ? usuario.getPseudonimo() : "Desconocido");
             }
         }
         return obras;
@@ -149,7 +150,7 @@ public class ObraService {
 
         // 1. Decodificar token
         String userId = jwtUtil.getUserIdFromToken(token);
-        String username = jwtUtil.extractUsername(token);
+        String username = jwtUtil.extractPseudonimo(token);
 
         // 2. Buscar obra
         ObraUrbanArt urbanArt = obraRepository.findById(obraId)
@@ -168,60 +169,72 @@ public class ObraService {
         return comment;
     }
 
-    public Like addlIKE( String obraId, String token) {
-
-        // 1. Decodificar token
+    public boolean toggleLike(String obraId, String token) {
         String userId = jwtUtil.getUserIdFromToken(token);
-        String username = jwtUtil.extractUsername(token);
+        String username = jwtUtil.extractPseudonimo(token);
 
-        // 2. Buscar obra
         ObraUrbanArt urbanArt = obraRepository.findById(obraId)
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
-        // 3. Revisar si ya existe un like de este usuario
-    boolean alreadyLiked = urbanArt.getLikes().stream()
-            .anyMatch(l -> l.getUsuarios_id().toHexString().equals(userId));
+        // Verificar si el usuario ya dio like
+        Optional<Like> existing = urbanArt.getLikes().stream()
+                .filter(l -> l.getUsuarios_id().toHexString().equals(userId))
+                .findFirst();
 
-    if (alreadyLiked) {
-        throw new RuntimeException("El usuario ya dio like a esta obra");
-    }
-        
-        // 4. Completar con info del usuario
-        Like like = new Like();
-        like.setUsuarios_id(new ObjectId(userId));
-        like.setUser_name(username);// forzamos fecha del servidor
-
-        // 5. Agregar a la obra
-        urbanArt.getLikes().add(like);
-
-        // 6. Guardar todo
-        obraRepository.save(urbanArt);
-        return like;
+        if (existing.isPresent()) {
+            // Si ya había like → quitarlo
+            urbanArt.getLikes().removeIf(l -> l.getUsuarios_id().toHexString().equals(userId));
+            obraRepository.save(urbanArt);
+            return false; // ahora no hay like
+        } else {
+            // Si no había like → agregarlo
+            Like like = new Like();
+            like.setUsuarios_id(new ObjectId(userId));
+            like.setUser_name(username);
+            urbanArt.getLikes().add(like);
+            obraRepository.save(urbanArt);
+            return true; // ahora sí hay like
+        }
     }
 
     public void addCalification(Calification calification, String obraId, String token) {
-        // Validar campos obligatorios
-        if (calification.getValor() == null || calification.getValor().trim().isEmpty()) {
-            throw new IllegalArgumentException("El comentario no puede estar vacío");
-        }
-
-        // 1. Decodificar token
-        String userId = jwtUtil.getUserIdFromToken(token);
-        String username = jwtUtil.extractUsername(token);
-
-        // 2. Buscar obra
-        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
-                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
-
-        // 3. Completar el comentario con info del usuario
-        calification.setUsuarios_id(new ObjectId(userId));
-        calification.setUser_name(username); // forzamos fecha del servidor
-
-        // 4. Agregar a la obra
-        urbanArt.getCalificaciones().add(calification);
-
-        // 5. Guardar todo
-        obraRepository.save(urbanArt);
+    // Validar campos obligatorios
+    if (calification.getValor() == null || calification.getValor().trim().isEmpty()) {
+        throw new IllegalArgumentException("La calificación no puede estar vacía");
     }
+
+    // 1. Decodificar token
+    String userId = jwtUtil.getUserIdFromToken(token);
+    String username = jwtUtil.extractPseudonimo(token);
+
+    // 2. Buscar obra
+    ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+            .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+
+    // 3. Completar calificación con info del usuario
+    calification.setUsuarios_id(new ObjectId(userId));
+    calification.setUser_name(username);
+
+    // 4. Verificar si el usuario ya calificó
+    boolean updated = false;
+    List<Calification> calificaciones = urbanArt.getCalificaciones();
+    for (Calification c : calificaciones) {
+        if (c.getUser_name().equals(username)) {
+            // Actualizar calificación existente
+            c.setValor(calification.getValor());
+            updated = true;
+            break;
+        }
+    }
+
+    // 5. Si no existía, agregar nueva calificación
+    if (!updated) {
+        calificaciones.add(calification);
+    }
+
+    // 6. Guardar la obra
+    obraRepository.save(urbanArt);
+}
+
 
 }

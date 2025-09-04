@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -74,7 +73,7 @@ public ResponseEntity<?> searchUser(@CookieValue(name = "jwt", required = false)
     }
 
     try {
-        String pseudonimo = jwtUtil.extractUsername(token); // el "subject" del JWT
+        String pseudonimo = jwtUtil.extractPseudonimo(token); // el "subject" del JWT
         User user = userService.findByPseudonimo(pseudonimo);
         
         if (user == null) {

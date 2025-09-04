@@ -58,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String username = jwtUtil.extractUsername(jwt);
+        String username = jwtUtil.extractPseudonimo(jwt);
         String role = jwtUtil.extractRole(jwt); // 👈 extraemos el rol
 
         // Spring Security espera "ROLE_" como prefijo

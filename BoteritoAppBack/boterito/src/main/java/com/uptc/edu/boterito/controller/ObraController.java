@@ -3,7 +3,6 @@ package com.uptc.edu.boterito.controller;
 import com.uptc.edu.boterito.dto.ObraRequest;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
-import com.uptc.edu.boterito.model.Like;
 import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,17 +69,16 @@ public class ObraController {
         return ResponseEntity.ok(newComment);
     }
 
-    @GetMapping("/{obraId}/like")
+    @PostMapping("/{obraId}/like")
     public ResponseEntity<?> addLike(
             @PathVariable String obraId,
-            @CookieValue(name = "jwt", required = false) String token // 👈 aquí leemos la cookie
-    ) {
+            @CookieValue(name = "jwt", required = false) String token) {
         if (token == null) {
             return ResponseEntity.status(401).body("No autenticado");
         }
 
-        Like newLike = obraService.addlIKE(obraId, token);
-        return ResponseEntity.ok(newLike);
+        Boolean isLike = obraService.toggleLike(obraId, token);
+        return ResponseEntity.ok(isLike);
     }
 
     @PostMapping("/{obraId}/calificacion")

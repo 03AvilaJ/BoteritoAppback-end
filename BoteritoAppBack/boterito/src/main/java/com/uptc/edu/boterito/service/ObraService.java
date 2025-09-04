@@ -198,43 +198,42 @@ public class ObraService {
     }
 
     public void addCalification(Calification calification, String obraId, String token) {
-    // Validar campos obligatorios
-    if (calification.getValor() == null || calification.getValor().trim().isEmpty()) {
-        throw new IllegalArgumentException("La calificación no puede estar vacía");
-    }
-
-    // 1. Decodificar token
-    String userId = jwtUtil.getUserIdFromToken(token);
-    String username = jwtUtil.extractPseudonimo(token);
-
-    // 2. Buscar obra
-    ObraUrbanArt urbanArt = obraRepository.findById(obraId)
-            .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
-
-    // 3. Completar calificación con info del usuario
-    calification.setUsuarios_id(new ObjectId(userId));
-    calification.setUser_name(username);
-
-    // 4. Verificar si el usuario ya calificó
-    boolean updated = false;
-    List<Calification> calificaciones = urbanArt.getCalificaciones();
-    for (Calification c : calificaciones) {
-        if (c.getUser_name().equals(username)) {
-            // Actualizar calificación existente
-            c.setValor(calification.getValor());
-            updated = true;
-            break;
+        // Validar campos obligatorios
+        if (calification.getValor() == null || calification.getValor().trim().isEmpty()) {
+            throw new IllegalArgumentException("La calificación no puede estar vacía");
         }
+
+        // 1. Decodificar token
+        String userId = jwtUtil.getUserIdFromToken(token);
+        String username = jwtUtil.extractPseudonimo(token);
+
+        // 2. Buscar obra
+        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+                .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
+
+        // 3. Completar calificación con info del usuario
+        calification.setUsuarios_id(new ObjectId(userId));
+        calification.setUser_name(username);
+
+        // 4. Verificar si el usuario ya calificó
+        boolean updated = false;
+        List<Calification> calificaciones = urbanArt.getCalificaciones();
+        for (Calification c : calificaciones) {
+            if (c.getUser_name().equals(username)) {
+                // Actualizar calificación existente
+                c.setValor(calification.getValor());
+                updated = true;
+                break;
+            }
+        }
+
+        // 5. Si no existía, agregar nueva calificación
+        if (!updated) {
+            calificaciones.add(calification);
+        }
+
+        // 6. Guardar la obra
+        obraRepository.save(urbanArt);
     }
-
-    // 5. Si no existía, agregar nueva calificación
-    if (!updated) {
-        calificaciones.add(calification);
-    }
-
-    // 6. Guardar la obra
-    obraRepository.save(urbanArt);
-}
-
 
 }

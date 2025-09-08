@@ -1,10 +1,10 @@
 package com.uptc.edu.boterito.service;
 
 import com.uptc.edu.boterito.dto.ObraRequest;
+import com.uptc.edu.boterito.dto.ObraUrbanArtDTO;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
 import com.uptc.edu.boterito.model.Like;
-import com.uptc.edu.boterito.model.ObraUrbanArt;
 import com.uptc.edu.boterito.model.User;
 import com.uptc.edu.boterito.repository.LocationRepository;
 import com.uptc.edu.boterito.repository.ObraRepository;
@@ -44,12 +44,12 @@ public class ObraService {
     @Autowired
     private JwtUtil jwtUtil;
 
-    public List<ObraUrbanArt> findAllValidates() {
-        List<ObraUrbanArt> obras = obraRepository.findAllValidates();
-        for (ObraUrbanArt obra : obras) {
+    public List<ObraUrbanArtDTO> findAllValidates() {
+        List<ObraUrbanArtDTO> obras = obraRepository.findAllValidates();
+        for (ObraUrbanArtDTO obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
                 User usuario = userRepository.findById(comentario.getUsuarios_id().toString()).orElseThrow(
-                        () -> new RuntimeException("Usuario no encontrado: " + comentario.getUsuarios_id()));
+                        () -> new RuntimeException("Usuario no encontrado " + comentario.getUsuarios_id()));
                 comentario.setNameUser(usuario.getPseudonimo());
             }
             for (Like like : obra.getLikes()) {
@@ -66,13 +66,13 @@ public class ObraService {
         return obras;
     }
 
-    public List<ObraUrbanArt> findAll() {
+    public List<ObraUrbanArtDTO> findAll() {
         List<User> allUsers = userRepository.findAll();
         Map<String, User> userMap = allUsers.stream()
                 .collect(Collectors.toMap(u -> u.getId().toString(), u -> u));
 
-        List<ObraUrbanArt> obras = obraRepository.findAll();
-        for (ObraUrbanArt obra : obras) {
+        List<ObraUrbanArtDTO> obras = obraRepository.findAll();
+        for (ObraUrbanArtDTO obra : obras) {
             for (Comment comentario : obra.getComentarios()) {
                 User usuario = userMap.get(comentario.getUsuarios_id().toString());
                 comentario.setNameUser(usuario != null ? usuario.getPseudonimo() : "Desconocido");
@@ -89,14 +89,28 @@ public class ObraService {
         return obras;
     }
 
-    public ObraUrbanArt createObra(ObraRequest obra, MultipartFile imagen) {
-        ObraUrbanArt urbanArt = new ObraUrbanArt();
+    public List<ObraUrbanArtDTO> findByOneUser(String token) {
+        String pseudonimo = jwtUtil.extractPseudonimo(token);
+        List<ObraUrbanArtDTO> obras = obraRepository.findByUsuarioCargaPseudonimo(pseudonimo);
+
+        return obras;
+    }
+
+    public ObraUrbanArtDTO createObra(ObraRequest obra, MultipartFile imagen) {
+        User user = userRepository.findByPseudonimo(obra.getPseudonimo());
+        ObraUrbanArtDTO urbanArt = new ObraUrbanArtDTO();
+
+        if (user != null) {
+            urbanArt.setId_usuario_carga(new ObjectId(user.getId()));
+        }
+
         Location newLocation = new Location();
         newLocation.setLat(Double.parseDouble(obra.getLat()));
         newLocation.setLng(Double.parseDouble(obra.getLng()));
         newLocation.setDireccion(obra.getDireccion());
         Location location = locationRepository.save(newLocation);
 
+        urbanArt.setFecha_registro(obra.getFecha_registro());
         urbanArt.setTitulo(obra.getTitulo());
         urbanArt.setAutor_name(obra.getAutor_name());
         urbanArt.setTecnicaId(new ObjectId(obra.getTecnica()));
@@ -123,19 +137,18 @@ public class ObraService {
 
                 file.delete(); // Limpiar archivo temporal
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
         return obraRepository.save(urbanArt);
     }
 
-    public ObraUrbanArt updateStatusRegister(String id, String idRegisterStatus) {
+    public ObraUrbanArtDTO updateStatusRegister(String id, String idRegisterStatus) {
         if (!ObjectId.isValid(idRegisterStatus)) {
             throw new IllegalArgumentException("El idRegisterStatus no es válido");
         }
 
-        ObraUrbanArt obra = obraRepository.findById(id)
+        ObraUrbanArtDTO obra = obraRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Obra con id " + id + " no encontrada"));
 
         obra.setEstadoRegistradoId(new ObjectId(idRegisterStatus));
@@ -153,7 +166,7 @@ public class ObraService {
         String username = jwtUtil.extractPseudonimo(token);
 
         // 2. Buscar obra
-        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+        ObraUrbanArtDTO urbanArt = obraRepository.findById(obraId)
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
         // 3. Completar el comentario con info del usuario
@@ -173,7 +186,7 @@ public class ObraService {
         String userId = jwtUtil.getUserIdFromToken(token);
         String username = jwtUtil.extractPseudonimo(token);
 
-        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+        ObraUrbanArtDTO urbanArt = obraRepository.findById(obraId)
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
         // Verificar si el usuario ya dio like
@@ -208,7 +221,7 @@ public class ObraService {
         String username = jwtUtil.extractPseudonimo(token);
 
         // 2. Buscar obra
-        ObraUrbanArt urbanArt = obraRepository.findById(obraId)
+        ObraUrbanArtDTO urbanArt = obraRepository.findById(obraId)
                 .orElseThrow(() -> new RuntimeException("Obra no encontrada"));
 
         // 3. Completar calificación con info del usuario
@@ -234,6 +247,10 @@ public class ObraService {
 
         // 6. Guardar la obra
         obraRepository.save(urbanArt);
+    }
+
+    public ObraUrbanArtDTO update(ObraUrbanArtDTO obra) {
+        return obraRepository.save(obra);
     }
 
 }

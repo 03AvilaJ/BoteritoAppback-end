@@ -1,19 +1,19 @@
 package com.uptc.edu.boterito.model;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
+import lombok.Data;
 
 @Data
 @Document(collection = "obras")
-public class ObraUrbanArt {
+public class UrbanArt {
+
     @Id
     private String id;
 
@@ -21,6 +21,12 @@ public class ObraUrbanArt {
 
     @Field("fecha_creacion")
     private String fechaCreacion;
+
+    @Field("id_usuario_carga")
+    private ObjectId id_usuario_carga;
+
+    @Field("fecha_registro")
+    private String fecha_registro;
 
     private String descripcion;
 
@@ -36,17 +42,11 @@ public class ObraUrbanArt {
     @Field("ilustracion_id")
     private ObjectId ilustracionId;
 
-    private Ilustracion ilustracion;
-
     @Field("tecnicas_id")
     private ObjectId tecnicaId;
 
-    private Technique tecnica;
-
     @Field("tipo_mural_id")
     private ObjectId tipoMuralId;
-
-    private TypeUrbanArt tipo;
 
     @Field("ubicaciones_id")
     private ObjectId ubicacionId;
@@ -62,19 +62,15 @@ public class ObraUrbanArt {
     @Field("estado_conservacion_id")
     private ObjectId estadoConservacionId;
 
-    private ConservationStatus estadoConservacion;
-
     private String autor_name;
 
     @Field("tipografias_id")
     private ObjectId tipografiasId;
 
-    private Typography typography;
 
     @Field("superficie_id")
     private ObjectId superficieId;
 
-    private Surface surface;
 
     private String contexto_historico;
 
@@ -83,9 +79,10 @@ public class ObraUrbanArt {
     @Field("estado_registrado_id")
     private ObjectId estadoRegistradoId;
 
-    private RegisteredStatus registeredStatus;
-
     private String link_obra;
         
-}
 
+
+
+
+}

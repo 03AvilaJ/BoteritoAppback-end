@@ -1,9 +1,10 @@
 package com.uptc.edu.boterito.controller;
 
 import com.uptc.edu.boterito.dto.ObraRequest;
+import com.uptc.edu.boterito.dto.ObraUrbanArtDTO;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
-import com.uptc.edu.boterito.model.ObraUrbanArt;
+import com.uptc.edu.boterito.model.UrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,19 +25,46 @@ public class ObraController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public List<ObraUrbanArt> findAll() {
+    public List<ObraUrbanArtDTO> findAll() {
         return obraService.findAll();
     }
 
     @GetMapping("/listaObras")
-    public List<ObraUrbanArt> findAllValidates() {
+    public List<ObraUrbanArtDTO> findAllValidates() {
         return obraService.findAllValidates();
     }
 
+    @GetMapping("/listaObrasUsuario")
+    public ResponseEntity<?> findByOneUser(@CookieValue(name = "jwt", required = false) String token) {
+        try {
+            if (token == null) {
+                return ResponseEntity.status(401).body("No autenticado");
+            }
+            List<ObraUrbanArtDTO> list = obraService.findByOneUser(token);
+            return ResponseEntity.ok(list);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al cargar sus obra: " + e.getMessage());
+        }
+
+    }
+
     @PostMapping("/guardarObra")
-    public ObraUrbanArt registrarObra(@RequestPart("obra") ObraRequest obra, // campos del formulario
+    public ObraUrbanArtDTO registrarObra(@RequestPart("obra") ObraRequest obra, // campos del formulario
             @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
         return obraService.createObra(obra, imagen);
+    }
+
+    @PutMapping("/updateObra")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateObra(@RequestBody ObraUrbanArtDTO obra) {
+        try {
+            ObraUrbanArtDTO updateObra = obraService.update(obra);
+            return ResponseEntity.ok(updateObra);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar la obra: " + e.getMessage());
+        }
     }
 
     // Para actualizar parcialmente un campo (ej: titulo)
@@ -46,7 +74,7 @@ public class ObraController {
             @PathVariable String id,
             @RequestParam String idRegisteredStatus) {
         try {
-            ObraUrbanArt obra = obraService.updateStatusRegister(id, idRegisteredStatus);
+            ObraUrbanArtDTO obra = obraService.updateStatusRegister(id, idRegisteredStatus);
 
             return ResponseEntity.ok(obra);
         } catch (Exception e) {

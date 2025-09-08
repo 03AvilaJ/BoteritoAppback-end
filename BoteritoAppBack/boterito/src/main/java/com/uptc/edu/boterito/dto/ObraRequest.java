@@ -1,5 +1,6 @@
 package com.uptc.edu.boterito.dto;
 
+
 import lombok.Data;
 
 @Data
@@ -8,6 +9,10 @@ public class ObraRequest {
     private String titulo;
 
     private String autor_name;
+
+    private String pseudonimo;
+
+    private String fecha_registro;
 
     private String tecnica;
 

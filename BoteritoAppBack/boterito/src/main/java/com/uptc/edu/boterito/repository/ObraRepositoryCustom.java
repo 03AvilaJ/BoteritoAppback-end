@@ -1,11 +1,13 @@
 package com.uptc.edu.boterito.repository;
 
-import com.uptc.edu.boterito.model.ObraUrbanArt;
 import java.util.List;
 
+import com.uptc.edu.boterito.dto.ObraUrbanArtDTO;
+
 public interface ObraRepositoryCustom {
-    List<ObraUrbanArt> findAllValidates();
-    List<ObraUrbanArt> findAll();
+    List<ObraUrbanArtDTO> findAllValidates();
+    List<ObraUrbanArtDTO> findAll();
+    List<ObraUrbanArtDTO> findByUsuarioCargaPseudonimo(String pseudonimo);
     
 }
 

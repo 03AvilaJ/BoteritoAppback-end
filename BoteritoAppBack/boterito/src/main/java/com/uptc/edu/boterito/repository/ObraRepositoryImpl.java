@@ -1,6 +1,5 @@
 package com.uptc.edu.boterito.repository;
 
-import com.uptc.edu.boterito.model.ObraUrbanArt;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -10,6 +9,8 @@ import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.UnwindOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Repository;
+
+import com.uptc.edu.boterito.dto.ObraUrbanArtDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
     }
 
     @Override
-    public List<ObraUrbanArt> findAllValidates() {
+    public List<ObraUrbanArtDTO> findAllValidates() {
 
         MatchOperation matchValidado = Aggregation
                 .match(Criteria.where("registeredStatus.estado_registro").is("validado"));
@@ -35,21 +36,23 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
 
         // 4) Ejecuta la agregación sobre la colección "obras" y mapea el resultado a
         // ObraUrbanArt.class
-        AggregationResults<ObraUrbanArt> results = mongoTemplate.aggregate(aggregation, "obras", ObraUrbanArt.class);
+        AggregationResults<ObraUrbanArtDTO> results = mongoTemplate.aggregate(aggregation, "obras",
+                ObraUrbanArtDTO.class);
 
         // 5) Retorna la lista mapeada
         return results.getMappedResults();
     }
 
     @Override
-    public List<ObraUrbanArt> findAll() {
+    public List<ObraUrbanArtDTO> findAll() {
 
         // 3) Crea la Aggregation pipeline con los stages (orden importa)
         Aggregation aggregation = createAgregations(null);
 
         // 4) Ejecuta la agregación sobre la colección "obras" y mapea el resultado a
         // ObraUrbanArt.class
-        AggregationResults<ObraUrbanArt> results = mongoTemplate.aggregate(aggregation, "obras", ObraUrbanArt.class);
+        AggregationResults<ObraUrbanArtDTO> results = mongoTemplate.aggregate(aggregation, "obras",
+                ObraUrbanArtDTO.class);
 
         // 5) Retorna la lista mapeada
         return results.getMappedResults();
@@ -76,7 +79,8 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
     }
 
     private Aggregation createAgregations(MatchOperation matchOperation) {
-
+        LookupOperation lookupOwnerUser = createLookupOperation("usuarios", "id_usuario_carga", "_id",
+                "owner_user");
         LookupOperation lookupIlustracion = createLookupOperation("ilustracion_muralista", "ilustracion_id", "_id",
                 "ilustracion");
         LookupOperation lookupLocation = createLookupOperation("ubicaciones", "ubicaciones_id", "_id", "ubicacion");
@@ -91,6 +95,7 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
         // 2) UnwindOperation: convierte el array "autor" en un objeto "autor" (mantiene
         // obras sin autor si preserve true)
 
+        UnwindOperation unwindOwner_user = createUnwindOperation("owner_user");
         UnwindOperation unwindIlustracion = createUnwindOperation("ilustracion");
         UnwindOperation unwindUbicacion = createUnwindOperation("ubicacion");
         UnwindOperation unwindTecnica = createUnwindOperation("tecnica");
@@ -102,9 +107,9 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
 
         List<AggregationOperation> operations = new ArrayList<>();
 
-        
-
         // Agregas todos los lookups y unwinds
+        operations.add(lookupOwnerUser);
+        operations.add(unwindOwner_user);
         operations.add(lookupIlustracion);
         operations.add(unwindIlustracion);
         operations.add(lookupLocation);
@@ -131,4 +136,20 @@ public class ObraRepositoryImpl implements ObraRepositoryCustom {
 
         return aggregation;
     }
+
+    @Override
+    public List<ObraUrbanArtDTO> findByUsuarioCargaPseudonimo(String pseudonimo) {
+        // Creamos el match para filtrar por pseudonimo
+        MatchOperation matchByPseudonimo = Aggregation
+                .match(Criteria.where("owner_user.pseudonimo").is(pseudonimo));
+
+        // Usamos el mismo pipeline de lookups + unwind, agregando el filtro
+        Aggregation aggregation = createAgregations(matchByPseudonimo);
+
+        AggregationResults<ObraUrbanArtDTO> results = mongoTemplate.aggregate(aggregation, "obras",
+                ObraUrbanArtDTO.class);
+
+        return results.getMappedResults();
+    }
+
 }

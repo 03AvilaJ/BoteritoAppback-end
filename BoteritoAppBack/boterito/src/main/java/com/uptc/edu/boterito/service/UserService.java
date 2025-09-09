@@ -1,5 +1,6 @@
 package com.uptc.edu.boterito.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -23,7 +24,7 @@ public class UserService implements UserDetailsService {
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private RoleRepository rolesRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -57,6 +58,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findAllUsersWithRoles();
     }
 
+    public List<Role> allRoles() {
+        return rolesRepository.findAll();
+    }
+
     public User findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
@@ -87,7 +92,7 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("Usuario no encontrado");
         }
 
-        Role role = roleRepository.findById(user.getRoles_id().toString())
+        Role role = rolesRepository.findById(user.getRoles_id().toString())
                 .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
 
         return new org.springframework.security.core.userdetails.User(
@@ -95,5 +100,6 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 List.of(new SimpleGrantedAuthority("ROLE_" + role.getRol().toUpperCase())));
     }
+
 
 }

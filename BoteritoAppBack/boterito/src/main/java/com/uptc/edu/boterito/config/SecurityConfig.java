@@ -65,7 +65,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/api/obras/listaObras").permitAll()
-                        .requestMatchers("/api/usuarios/register").permitAll()                  
+                        .requestMatchers("/api/usuarios/register").permitAll()    
+                        .requestMatchers("/api/usuarios/forgot-password").permitAll()  
+                        .requestMatchers("/api/usuarios/reset-password").permitAll()            
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex

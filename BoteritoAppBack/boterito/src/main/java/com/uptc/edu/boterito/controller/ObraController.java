@@ -4,7 +4,6 @@ import com.uptc.edu.boterito.dto.ObraRequest;
 import com.uptc.edu.boterito.dto.ObraUrbanArtDTO;
 import com.uptc.edu.boterito.model.Calification;
 import com.uptc.edu.boterito.model.Comment;
-import com.uptc.edu.boterito.model.UrbanArt;
 import com.uptc.edu.boterito.service.ObraService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

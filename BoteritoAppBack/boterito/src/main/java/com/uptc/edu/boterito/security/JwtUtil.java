@@ -60,5 +60,12 @@ public String getUserIdFromToken(String token) {
             return false;
         }
     }
+
+    public Key getKey() {
+    return key;
+}
+
+
+    
 }
 

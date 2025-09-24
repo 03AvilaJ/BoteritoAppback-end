@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Value;
 
-
 import com.uptc.edu.boterito.dto.UserDTO;
 import com.uptc.edu.boterito.model.User;
 import com.uptc.edu.boterito.security.JwtUtil;
@@ -38,7 +37,7 @@ public class UserController {
 
     private static final String ID_USER_ROLE = "689bd2e00691edc2fc5831fd";
 
-    @Value("${frontend.url}")   // Inyecta la URL desde properties
+    @Value("${frontend.url}") // Inyecta la URL desde properties
     private String frontendUrl;
 
     @Autowired
@@ -122,31 +121,40 @@ public class UserController {
             @CookieValue(name = "jwt", required = false) String token,
             @RequestBody User updatedData) {
         if (token == null) {
-            return ResponseEntity.status(401).body("No autenticado");
+            return ResponseEntity.status(401).body(Map.of("message", "No autenticado"));
         }
 
         try {
-            // 1. Extraer pseudónimo (o id) desde el token
+            // 1. Extraer pseudónimo desde el token
             String pseudonimo = jwtUtil.extractPseudonimo(token);
 
-            // 2. Buscar el usuario en la BD
+            // 2. Buscar usuario actual
             User user = userService.findByPseudonimo(pseudonimo);
             if (user == null) {
-                return ResponseEntity.status(404).body("Usuario no encontrado");
+                return ResponseEntity.status(404).body(Map.of("message", "Usuario no encontrado"));
             }
 
-            // 3. Actualizar los campos (solo los que quieras permitir modificar)
-            if (updatedData.getBiografia() != null)
+            // 3. Actualizar campos permitidos
+            if (updatedData.getBiografia() != null) {
                 user.setBiografia(updatedData.getBiografia());
+            }
 
-            // 4. Guardar cambios en la BD
+            if (updatedData.getPseudonimo() != null) {
+                User existente = userService.findByPseudonimo(updatedData.getPseudonimo());
+                if (existente != null && !existente.getId().equals(user.getId())) {
+                    return ResponseEntity.status(401).body(Map.of("message", "El pseudonimo ya esta en uso"));
+                }
+                user.setPseudonimo(updatedData.getPseudonimo());
+            }
+
+            // 4. Guardar cambios
             userService.savUser(user);
 
             // 5. Responder con el usuario actualizado
             return ResponseEntity.ok(user);
 
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Token inválido o expirado");
+            return ResponseEntity.status(401).body(Map.of("message", "Token invalido o expirado"));
         }
     }
 

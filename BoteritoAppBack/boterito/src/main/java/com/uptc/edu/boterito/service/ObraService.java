@@ -171,7 +171,7 @@ public class ObraService {
 
         // 3. Completar el comentario con info del usuario
         comment.setUsuarios_id(new ObjectId(userId));
-        comment.setNameUser(username);
+        //comment.setNameUser(username);
         comment.setFecha(new Date()); // forzamos fecha del servidor
 
         // 4. Agregar a la obra
@@ -203,7 +203,7 @@ public class ObraService {
             // Si no había like → agregarlo
             Like like = new Like();
             like.setUsuarios_id(new ObjectId(userId));
-            like.setUser_name(username);
+            //like.setUser_name(username);
             urbanArt.getLikes().add(like);
             obraRepository.save(urbanArt);
             return true; // ahora sí hay like
@@ -226,13 +226,13 @@ public class ObraService {
 
         // 3. Completar calificación con info del usuario
         calification.setUsuarios_id(new ObjectId(userId));
-        calification.setUser_name(username);
+        //calification.setUser_name(username);
 
         // 4. Verificar si el usuario ya calificó
         boolean updated = false;
         List<Calification> calificaciones = urbanArt.getCalificaciones();
         for (Calification c : calificaciones) {
-            if (c.getUser_name().equals(username)) {
+            if (c.getUsuarios_id().toHexString().equals(userId)) {
                 // Actualizar calificación existente
                 c.setValor(calification.getValor());
                 updated = true;
